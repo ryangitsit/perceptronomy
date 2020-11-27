@@ -1,6 +1,7 @@
 
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 """
 This is a preliminary version of a Perceptron Learning Algorithm.
@@ -43,6 +44,21 @@ def run_rosenblatt(N, P, n_max):
 
     return accuracy
 
+def plot_alpha(alpha, y):
+    plt.plot(alpha, y)
+    plt.show()
+
+# see equation 3.42
+def get_P_ls(P, N):
+    if P <= N:
+        P_ls = 1
+    else:
+        binomial = []
+        for i in range(N):
+            binomial.append(math.comb((P-1), i))
+        P_ls = (2**(1-N))*sum(binomial)
+    return P_ls
+
 def main():
     N = 20           # number of features
     alpha = np.arange(0.75, 3.25, 0.25).tolist()
@@ -51,14 +67,23 @@ def main():
     n_max = 100     # max number of epochs (sweeps through data)
 
     # d) train on multiple randomized data sets
-    collect_acc = []
+    acc_per_p = []
+    P_ls_collect = []
     for run in alpha:                       # change parameters
         P = int(run*N)                         
+        rep_acc = []
         for rep in range(n_D):              # given the parameters average over n_D runs
             accuracy = run_rosenblatt(N, P, n_max)
-            collect_acc.append(accuracy)
+            rep_acc.append(accuracy)
 
-        mean_acc = np.mean(collect_acc)     # average accuracy across all runs
-        print(f"AVG ACC for P={P} is {mean_acc}")
+        # NOTE: ls is linearly separable
+        Q_ls = np.mean(rep_acc)     # average accuracy across all runs
+        acc_per_p.append(Q_ls)
+
+        P_ls_collect.append(get_P_ls(P,N))
+
+        print(f"Q_l.s. (mean accuracy) for P={P} is {Q_ls}")
+    
+    plot_alpha(alpha, P_ls_collect)
 
 main()
