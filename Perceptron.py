@@ -6,7 +6,7 @@ import math
 """
 This is a preliminary version of a Perceptron Learning Algorithm.
 
- * Raphael, I still have some research/verification to do on the content in and related to this project.  (Planning to finish up before our meeting)
+ * Rafael, I still have some research/verification to do on the content in and related to this project.  (Planning to finish up before our meeting)
  - This was just an intuitive first draft to play around with.  I believe my indexing for w-updates is probably not corrent and that not all values are updated.
  - The sign equation is probably not correct.  This was just an intuitive guess.  I will look more carefully at it later.
  - Part D from assignment is not included.  However, the loop to create a new data set and run the experiment multiple times is present.  
@@ -31,66 +31,59 @@ def run_rosenblatt(N, P, n_max):
             E = np.dot(np.transpose(W[:, 0]), X[:, p]) * Y[p]       # dot weights with features and multiply with label sign (1-D real number)
             E_list.append(E)
             if E <= 0:
-                W[:, 0] = W[:, 0] + (1/N) * X[:, p] * Y[p]          # check if local potential is less than zero and update weight if necessary
+                W[:,0] = W[:,0] + (1/N) * X[:, p] * Y[p]            # check if local potential is less than zero and update weight if necessary
 
         if all([e > 0 for e in E_list]): break                      # end training if all E > 0
 
     # check accuracy against labels
-    #sign = np.sign((np.multiply(W, X)).sum(axis=0))        # sign of sum of dotted columns
     sign = np.sign(np.dot(np.transpose(W), X))
     sign = sign.reshape((P,1))
-    #print(f"X = {sign} \nY = {Y} \n\n")
+    print(sign.shape)
+
+
 
     correct = 0
-    for i in range(len(Y)):
+    for i in range(P):
         if Y[i] == sign[i]: correct += 1
-    accuracy = correct/len(Y)
-    #print(np.sum(np.dot(W,np.transpose(W))))
+    accuracy = correct/P
     return accuracy
 
-def plot_alpha(alpha, y):
-    plt.plot(alpha, y)
-    plt.xlabel('Accuracy')
-    plt.ylabel('Alpha')
+def plot_alpha(alpha, y, N):
+    plt.plot(alpha, y, label = "N=" + str(N))
+    plt.xlabel('Alpha')
+    plt.ylabel('Q_ls')
+    #plt.ylim(0, 1)
     plt.title("Q_ls(alpha)")
-    plt.show()
-
-# # see equation 3.42
-# def get_P_ls(P, N):
-#     if P <= N:
-#         P_ls = 1
-#     else:
-#         binomial = []
-#         for i in range(N):
-#             binomial.append(math.comb((P-1), i))
-#         P_ls = (2**(1-N))*sum(binomial)
-#     return P_ls
 
 def main():
-    N = 20          # number of features
-    alpha = np.arange(0.25, 4.25, 0.25).tolist()
+    N = [20]    # number of features
+    alpha_step = 0.25
+
+    alpha = np.arange(0.75, 5 + alpha_step, alpha_step).tolist()
     mean_acc = 0    # initialize average accuracy counter
     n_D = 50        # number of experiments to run
     n_max = 100     # max number of epochs (sweeps through data)
 
     # d) train on multiple randomized data sets
-    acc_per_p = []
-    P_ls_collect = []
-    for run in alpha:                       # change parameters
-        P = int(run*N)                         
-        rep_acc = []
-        for rep in range(n_D):              # given the parameters average over n_D runs
-            accuracy = run_rosenblatt(N, P, n_max)
-            rep_acc.append(accuracy)
+    def run_single_N(N):
+        acc_per_alpha = []
+        for run in alpha:                       # change parameters
+            P = int(run*N)                         
+            rep_acc = []
+            for rep in range(n_D):              # given the parameters average over n_D runs
+                accuracy = run_rosenblatt(N, P, n_max)
+                rep_acc.append(accuracy)
+            acc_per_alpha.append(np.mean(rep_acc))
+            # NOTE: ls is linearly separable
+            Q_ls = acc_per_alpha
 
-        # NOTE: ls is linearly separable
-        Q_ls = np.mean(rep_acc)     # average accuracy across all runs
-        acc_per_p.append(Q_ls)
-
-        #P_ls_collect.append(get_P_ls(P,N))
-
-        #print(f"Q_l.s. (mean accuracy) for P={P} is {Q_ls}")
+        return Q_ls
     
-    plot_alpha(alpha, acc_per_p)
+    for N_i in N:
+        N_i_acc = run_single_N(N_i)
+        plot_alpha(alpha, N_i_acc, N_i)
+
+    plt.legend()
+    plt.show()
 
 main()
