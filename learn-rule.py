@@ -3,19 +3,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 #import seaborn as sns
 import math
-
+import random
 
 """
 - what is meant by |w_star|^2 = N ?  How to define it?
 - what is w(t_max)?  How can we use it as part of the stopping criterion if we don't know it yet?
 """
 
+# initialize w* to satisfy |w|² = N
+def init_w_star(N):
+    '''
+    This function was derived as follows:
+
+    |w|² = N
+    |w| = sqrt(N)
+    sqrt(x1² + x2² + ... + xn²) = sqrt(N)
+    x1² + x2² + ... + xn² = N
+    x1 + x2 + ... xn = sqrt(N)
+    '''
+
+    w = np.zeros(N)
+    for i in range(N):
+        if N <= 0: break
+        if N == i: w[i] = math.sqrt(N)
+        w[i] = random.uniform(0, math.sqrt(N))
+        N -= w[i]**2
+    return w
 
 # perform a run on a single set of data
 def run_rosenblatt(N, P, n_max):
     # a) generate data
     X = np.random.normal(0, 1, (N, P))               # randomly generated feature vector matrix
-    w_star = np.ones((N,1)) #np.random.dirichlet(np.ones(N), size=N)
+    #w_star = np.ones((N,1)) #np.random.dirichlet(np.ones(N), size=N)
+    w_star = init_w_star(N)
+
+
     Y = np.transpose(np.sign(np.dot(np.transpose(w_star), X)))     # randomly generated plus/minus 1 labels
     W =  np.zeros((N, 1))
     E_list = np.zeros((1,P))                         # Initialize vector to hold local potentials

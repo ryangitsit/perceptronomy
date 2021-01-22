@@ -61,6 +61,7 @@ def run_rosenblatt(N, P, n_max, Q_tot):
         if Y[i] == sign[i]: correct += 1
 
     Q_ls_single = Q_count/Q_tot
+    print(f"qls {Q_ls_single}")
 
     return Q_ls_single, embedding
 
@@ -76,7 +77,7 @@ def main():
     N = [5, 20, 100]    # number of features
     alpha_step = 0.25
     
-    alpha = np.arange(0.25, 4 + alpha_step, alpha_step).tolist()
+    alpha = np.arange(0.75, 3.0 + alpha_step, alpha_step).tolist()
     n_D = 50        # number of experiments to run
     n_max = 100     # max number of epochs (sweeps through data)
 
