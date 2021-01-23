@@ -26,7 +26,7 @@ def init_w_star(N):
     return w
 
 # perform a run on a single set of data
-def run_minover(N, P, n_max, stopped):
+def run_minover(N, P, n_max, stopped, stable_crit):
 
     # a) generate data
     X = np.random.normal(0, 1, (N, P))               # randomly generated feature vector matrix
@@ -59,14 +59,13 @@ def run_minover(N, P, n_max, stopped):
             stopped.append(1)
         else:
             stopped.append(0)
-
-        stable = 15      # Define required consecutive iterations of approx zero angular change to meet stopping criterion
+  
         stability = 0   # Counter for zero-angular-change iterations
-        if n > stable:
-            for i in range(stable):
+        if n > stable_crit:
+            for i in range(stable_crit):
                 stability += stopped[n-i]
                 
-            if stability == stable:
+            if stability == stable_crit:
                 break 
 
     e_g = (1/3.14)*np.arccos(np.dot(np.transpose(w_t),w_star)/(np.linalg.norm(w_t)*np.linalg.norm(w_star)))
@@ -74,11 +73,12 @@ def run_minover(N, P, n_max, stopped):
     return e_g , stopped
 
 
-def plot_alpha(alpha, y, N):
+def plot_alpha(alpha, y, N, stable_crit):
     plt.plot(alpha, y, label = "N=" + str(N))
     plt.xlabel(r'$\alpha=P/N$')
     plt.ylabel(r'$\epsilon_g(t_{max})$')
-    plt.title(r"Learning Curve (Averaged Over $N_D=10$): Strong Stopping")
+    condition = "Strong" if stable_crit == 15 else "Weak"
+    plt.title(r"Learning Curve (Averaged Over $N_D=10$): " + condition + " Stopping")
 
 def main():
 
@@ -90,6 +90,9 @@ def main():
     n_D = 10        # number of experiments to run
     n_max = 100     # max number of epochs (sweeps through data)
 
+    # Define required consecutive iterations of approx zero angular change to meet stopping criterion
+    stable_crit = 5    # 15 denotes strong, 5 denotes weak stopping criterion
+
     # d) train on multiple randomized data sets
     def run_single_N(N):
         e_g_per_alpha = []
@@ -100,7 +103,7 @@ def main():
 
             for rep in range(n_D):
                 stopped = []                                     
-                e_g_single, stopped = run_minover(N, P, n_max, stopped)               # run minover for interating parameters
+                e_g_single, stopped = run_minover(N, P, n_max, stopped, stable_crit)    # run minover for interating parameters
                 rep_e_g.append(e_g_single)                               # append results
                 print(stopped) 
             e_g_per_alpha.append(np.mean(rep_e_g))                          # take avarage of results
@@ -116,7 +119,7 @@ def main():
     
     for N_i in N:
         N_i_e_g = run_single_N(N_i)
-        plot_alpha(alpha, N_i_e_g, N_i)
+        plot_alpha(alpha, N_i_e_g, N_i, stable_crit)
 
     plt.legend()
     plt.show()
