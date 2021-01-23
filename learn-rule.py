@@ -4,10 +4,6 @@ import matplotlib.pyplot as plt
 import math
 import random
 
-"""
-- what is meant by |w_star|^2 = N ?  How to define it?
-- what is w(t_max)?  How can we use it as part of the stopping criterion if we don't know it yet?
-"""
 
 # initialize w* to satisfy |w|² = N
 def init_w_star(N):
@@ -30,12 +26,11 @@ def init_w_star(N):
     return w
 
 # perform a run on a single set of data
-def run_rosenblatt(N, P, n_max, stopped):
+def run_minover(N, P, n_max, stopped):
+
     # a) generate data
     X = np.random.normal(0, 1, (N, P))               # randomly generated feature vector matrix
-    #w_star = np.ones((N,1)) #np.random.dirichlet(np.ones(N), size=N)
     w_star = init_w_star(N)
-
 
     y = np.transpose(np.sign(np.dot(np.transpose(w_star), X)))     # randomly generated plus/minus 1 labels
     W =  np.zeros((N, 1))
@@ -49,10 +44,7 @@ def run_rosenblatt(N, P, n_max, stopped):
             
             E = np.dot(np.transpose(W[:, 0]), X[:, p]) * y[p]       # dot weights with features and multiply with label sign (1-D real number)
 
-
             E_list[0,p] = E                                         # keep all local potentials in a list
-
-            kappa_list[0,p] = E/np.linalg.norm(W[:, 0])
 
             kappa_min = np.argmin(E_list)
 
@@ -63,44 +55,30 @@ def run_rosenblatt(N, P, n_max, stopped):
         w_t = W[:,0].reshape((N,1))
         ang_change = (1/3.14)*np.arccos(np.dot(np.transpose(last_w),w_t)/(np.linalg.norm(last_w)*np.linalg.norm(w_t)))
 
-        if np.abs(ang_change) < .000000005:
+        if np.abs(ang_change) < .00001:
             stopped.append(1)
         else:
             stopped.append(0)
 
-        stable = 10
-        stability = 0
+        stable = 15      # Define required consecutive iterations of approx zero angular change to meet stopping criterion
+        stability = 0   # Counter for zero-angular-change iterations
         if n > stable:
             for i in range(stable):
                 stability += stopped[n-i]
                 
             if stability == stable:
                 break 
-        
-
-        
-    w_t = W[:,0].reshape((N,1))
 
     e_g = (1/3.14)*np.arccos(np.dot(np.transpose(w_t),w_star)/(np.linalg.norm(w_t)*np.linalg.norm(w_star)))
 
-
-        
-    # sign = np.sign(np.dot(np.transpose(W), X)) # determine the sign for each training instance
-    # sign = sign.reshape((P,1))
-
-    # correct = 0
-    # for i in range(P):
-    #     if y[i] == sign[i]: correct += 1
-    # acc = correct/P
-    return e_g , kappa_list, stopped
+    return e_g , stopped
 
 
 def plot_alpha(alpha, y, N):
     plt.plot(alpha, y, label = "N=" + str(N))
-    plt.xlabel('Alpha=P/N')
-    plt.ylabel('e_g(t_max)')
-    #plt.ylim(0, 1)
-    plt.title("Learning Curve (Averaged Over N_D=10)")
+    plt.xlabel(r'$\alpha=P/N$')
+    plt.ylabel(r'$\epsilon_g(t_{max})$')
+    plt.title(r"Learning Curve (Averaged Over $N_D=10$): Strong Stopping")
 
 def main():
 
@@ -122,18 +100,16 @@ def main():
 
             for rep in range(n_D):
                 stopped = []                                     
-                e_g_single, k_list, stopped = run_rosenblatt(N, P, n_max, stopped)               # run Rosenblatt for interating parameters
+                e_g_single, stopped = run_minover(N, P, n_max, stopped)               # run minover for interating parameters
                 rep_e_g.append(e_g_single)                               # append results
-                print(stopped)
-                #rep_k.append(k_list)
-                #plt.hist(k_list, bins = 20)
+                print(stopped) 
             e_g_per_alpha.append(np.mean(rep_e_g))                          # take avarage of results
                     
             #plt.show()
         return e_g_per_alpha 
 
     # stopped = 0
-    # e_gg, k_list, stopped = run_rosenblatt(20, 5, 1, stopped)
+    # e_gg, k_list, stopped = run_minover(20, 5, 1, stopped)
     # print (stopped)
     # plt.hist(k_list, bins = 10)
     # plt.show()
