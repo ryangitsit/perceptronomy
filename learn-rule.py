@@ -28,48 +28,49 @@ def init_w_star(N):
 # perform a run on a single set of data
 def run_minover(N, P, n_max, stopped, stable_crit):
 
-    # a) generate data
-    X = np.random.normal(0, 1, (N, P))               # randomly generated feature vector matrix
-    w_star = init_w_star(N)
+    # generate data
+    X = np.random.normal(0, 1, (N, P))                          # randomly generated P examples of N dimeions
+    w_star = init_w_star(N)                                     # initialize teacher vector 
+    y = np.transpose(np.sign(np.dot(np.transpose(w_star), X)))  # define labes on basis of teacher making correct classifications via sign(w* \cdot X)
+    W =  np.zeros((N, 1))                                       # initialize student vector of N-dimensions as zero vector
+    E_list = np.zeros((1,P))                                    # Initialize vector to hold local potentials
 
-    y = np.transpose(np.sign(np.dot(np.transpose(w_star), X)))     # randomly generated plus/minus 1 labels
-    W =  np.zeros((N, 1))
-    E_list = np.zeros((1,P))                         # Initialize vector to hold local potentials
-    kappa_list = np.zeros((1,P))
-
-    # b) sequential training
-    for n in range(n_max):              # epoch loop 
+    # sequential training
+    for n in range(n_max):                                      # epoch loop 
             
-        for p in range(P):              # feature vector loop
+        for p in range(P):                                      # feature vector loop
             
-            E = np.dot(np.transpose(W[:, 0]), X[:, p]) * y[p]       # dot weights with features and multiply with label sign (1-D real number)
+            E = np.dot(np.transpose(W[:, 0]), X[:, p]) * y[p]   # dot weight vector with feature vector (for pth example) and multiply with the label
 
-            E_list[0,p] = E                                         # keep all local potentials in a list
+            E_list[0,p] = E                                     # keep all local potentials in a list
 
-            kappa_min = np.argmin(E_list)
+            kappa_min = np.argmin(E_list)                       # stability is defined by nearest example to threshold (lowest local potential), store the index of this example
 
-            last_w = W[:,0]
+            last_w = W[:,0]                                     # keep track of the previous weight vector
 
-            W[:,0] = W[:,0] + (1/N) * X[:, kappa_min] * y[kappa_min]    # check if local potential is less than zero and update weight if necessary
+            W[:,0] = W[:,0] + (1/N) * X[:, kappa_min] * y[kappa_min]    # update weight with lowest E-index sample vector times label
 
+        # measure the angular change between the previous weight vector and the current one
         w_t = W[:,0].reshape((N,1))
         ang_change = (1/3.14)*np.arccos(np.dot(np.transpose(last_w),w_t)/(np.linalg.norm(last_w)*np.linalg.norm(w_t)))
 
-        # when angular change was near zero then store 1 to a list, else store 0
+        # if the angular change of the last iteration is approximately zero, append 1, else 0
         if np.abs(ang_change) < .00001:
             stopped.append(1)
         else:
             stopped.append(0)
   
-        stability = 0   # Counter for zero-angular-change iterations
+        stability = 0   # Counter for zero-angular-change of stable_crit many past iterations
+
         if n > stable_crit:
             for i in range(stable_crit):
-                stability += stopped[n-i]
+                stability += stopped[n-i]   # accumulate past zero-change iterations
                 
-            if stability == stable_crit:
+            if stability == stable_crit:    # if no change has occured for stable_crit iterations, break
                 break 
 
-    e_g = (1/3.14)*np.arccos(np.dot(np.transpose(w_t),w_star)/(np.linalg.norm(w_t)*np.linalg.norm(w_star)))
+    # measure generalized error of training process
+    e_g = (1/3.14)*np.arccos(np.dot(np.transpose(w_t),w_star)/(np.linalg.norm(w_t)*np.linalg.norm(w_star))) 
 
     return e_g , stopped
 
@@ -83,44 +84,35 @@ def plot_alpha(alpha, y, N, stable_crit):
 
 def main():
 
-    N = [5, 20, 50]    # number of features
-    
-    alpha_step = 0.25
-    
-    alpha = np.arange(0.25, 5 + alpha_step, alpha_step).tolist()
-    n_D = 10        # number of experiments to run
-    n_max = 100     # max number of epochs (sweeps through data)
+    N = [5, 20, 50]                                                 # number of features
+    alpha_step = 0.25                                               # Alpha step size
+    alpha = np.arange(0.25, 5 + alpha_step, alpha_step).tolist()    # Alpha stepping across given range
+    n_D = 10                                                        # number of experiments to run on new datasets
+    n_max = 100                                                     # max number of epochs (sweeps through data)
 
     # Define required consecutive iterations of approx zero angular change to meet stopping criterion
     stable_crit = 5    # 15 denotes strong, 5 denotes weak stopping criterion
 
-    # d) train on multiple randomized data sets
+    # train on multiple randomized data sets for different values of alpha
     def run_single_N(N):
         e_g_per_alpha = []
 
-        for run in alpha:                       # change parameters
-            P = int(run*N)                      # iterate through different P values (as ratios of alpha)   
-            rep_e_g = []                          # intialize list of all Q values
+        for run in alpha:                      
+            P = int(run*N) # iterate through different P values (as ratios of alpha)   
+            rep_e_g = []   # initialize a list to store generalized errors for different experiments
 
-            for rep in range(n_D):
+            for rep in range(n_D): # iterate of n_D datasets
                 stopped = []                                     
                 e_g_single, stopped = run_minover(N, P, n_max, stopped, stable_crit)    # run minover for interating parameters
-                rep_e_g.append(e_g_single)                               # append results
-                print(stopped) 
-            e_g_per_alpha.append(np.mean(rep_e_g))                          # take avarage of results
+                rep_e_g.append(e_g_single)                                              # append results
+                #print(stopped)                                                         # print e_g to observe stopping
+            e_g_per_alpha.append(np.mean(rep_e_g))                                      # take avarage of results
                     
-            #plt.show()
-        return e_g_per_alpha 
-
-    # stopped = 0
-    # e_gg, k_list, stopped = run_minover(20, 5, 1, stopped)
-    # print (stopped)
-    # plt.hist(k_list, bins = 10)
-    # plt.show()
+        return e_g_per_alpha                                                            # return an e_g for each alpha
     
-    for N_i in N:
-        N_i_e_g = run_single_N(N_i)
-        plot_alpha(alpha, N_i_e_g, N_i, stable_crit)
+    for N_i in N:                                       # iterate for different values of N (and thus P and alpha)
+        N_i_e_g = run_single_N(N_i)                     # run the minover algorithm for a single N accross multiple datasets for diff alphas
+        plot_alpha(alpha, N_i_e_g, N_i, stable_crit)    # plot the results!
 
     plt.legend()
     plt.show()
