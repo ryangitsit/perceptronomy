@@ -3,20 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-"""
-This is a preliminary version of a Perceptron Learning Algorithm.
-
- * Rafael, I still have some research/verification to do on the content in and related to this project.  (Planning to finish up before our meeting)
- - This was just an intuitive first draft to play around with.  I believe my indexing for w-updates is probably not corrent and that not all values are updated.
- - The sign equation is probably not correct.  This was just an intuitive guess.  I will look more carefully at it later.
- - Part D from assignment is not included.  However, the loop to create a new data set and run the experiment multiple times is present.  
- - Average accuracy is printed.  It becomes clear that for different P and N ratios, there are different accuracies, so part D makes sense.
- - Have not looked at the bonus questions.
-
-"""
-
-
-
 # perform a run on a single set of data
 def run_rosenblatt(N, P, n_max, Q_tot):
     # a) generate data
@@ -107,13 +93,5 @@ def main():
 
     plt.legend()
     plt.show()
-
-    # for N_i in N:
-    #     N_i_Q, N_i_embed = run_single_N(N_i)
-    #     plot_alpha(alpha, N_i_embed, N_i)
-
-    # plt.legend()
-    # plt.show()
-    
 
 main()
