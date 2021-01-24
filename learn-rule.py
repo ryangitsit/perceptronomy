@@ -55,6 +55,7 @@ def run_minover(N, P, n_max, stopped, stable_crit):
         w_t = W[:,0].reshape((N,1))
         ang_change = (1/3.14)*np.arccos(np.dot(np.transpose(last_w),w_t)/(np.linalg.norm(last_w)*np.linalg.norm(w_t)))
 
+        # when angular change was near zero then store 1 to a list, else store 0
         if np.abs(ang_change) < .00001:
             stopped.append(1)
         else:
