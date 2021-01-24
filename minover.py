@@ -31,7 +31,7 @@ def run_minover(N, P, n_max, stopped, stable_crit):
     # generate data
     X = np.random.normal(0, 1, (N, P))                          # randomly generated P examples of N dimeions
     w_star = init_w_star(N)                                     # initialize teacher vector 
-    y = np.transpose(np.sign(np.dot(np.transpose(w_star), X)))  # define labes on basis of teacher making correct classifications via sign(w* \cdot X)
+    y = np.transpose(np.sign(np.dot(np.transpose(w_star), X)))  # define lables on basis of teacher making correct classifications via sign(w* \cdot X)
     W =  np.zeros((N, 1))                                       # initialize student vector of N-dimensions as zero vector
     E_list = np.zeros((1,P))                                    # Initialize vector to hold local potentials
 
@@ -64,7 +64,7 @@ def run_minover(N, P, n_max, stopped, stable_crit):
             for i in range(stable_crit):
                 stability += stopped[n-i]   # accumulate past zero-change iterations
                 
-            if stability == stable_crit:    # if no change has occured for stable_crit iterations, break
+            if stability == stable_crit:    # if no change has occurred for stable_crit iterations, break
                 break 
 
 
@@ -95,9 +95,6 @@ def main():
     n_D = 10                                                        # number of experiments to run on new datasets
     n_max = 100                                                     # max number of epochs (sweeps through data)
 
-    # Define required consecutive iterations of approx zero angular change to meet stopping criterion
-    #stable_crit = 1    # 15 denotes strong, 5 denotes weak stopping criterion
-
     # train on multiple randomized data sets for different values of alpha
     def run_single_N(N, SC):
         e_g_per_alpha = []
@@ -110,7 +107,6 @@ def main():
                 stopped = []                                     
                 e_g_single, stopped = run_minover(N, P, n_max, stopped, SC)             # run minover for interating parameters
                 rep_e_g.append(e_g_single)                                              # append results
-                #print(len(stopped))                                                    # print e_g to observe stopping
             e_g_per_alpha.append(np.mean(rep_e_g))                                      # take avarage of results
                     
         return e_g_per_alpha                                                            # return an e_g for each alpha
