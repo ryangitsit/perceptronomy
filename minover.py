@@ -46,8 +46,6 @@ def run_minover(N, P, n_max, stopped, stable_crit):
 
             kappa_min = np.argmin(E_list)                       # stability is defined by nearest example to threshold (lowest local potential), store the index of this example
 
-            #last_w = W[:,0]                                     # keep track of the previous weight vector
-
             W[:,0] = W[:,0] + (1/N) * X[:, kappa_min] * y[kappa_min]    # update weight with lowest E-index sample vector times label
 
         # measure the angular change between the previous weight vector and the current one
